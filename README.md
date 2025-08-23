@@ -12,28 +12,38 @@ go get -u github.com/NovanMondon/go-simple-file-storage/storage
 ## Usage
 
 ```go
-import "github.com/NovanMondon/go-simple-file-storage/storage"
+package main
+
+import (
+	"log"
+
+	"github.com/NovanMondon/go-simple-file-storage/storage"
+)
 
 type SampleData struct {
 	Number int `json:"number"`
 }
 
-storage := storage.New[*SampleData]("data/storage.txt")
-err := storage.Save(&SampleData{Number: i})
-if err != nil {
-    log.Println("Error saving:", err)
-} else {
-    log.Println("Saved:", i)
+func main() {
+	storage := storage.New[*SampleData](
+		"data/storage.txt",
+	)
+
+	err := storage.Save(&SampleData{Number: 100})
+	if err != nil {
+		log.Println("Error saving:", err)
+		return
+	}
+
+	data, err := storage.Load()
+	if err != nil {
+		log.Println("Error loading:", err)
+		return
+	}
+
+	log.Println("Loaded:", data.Number)
 }
 
-data, err := storage.Load()
-if err != nil {
-    log.Println("Error loading:", err)
-    return
-}
-
-
-log.Println("Loaded:", data.Number)
 ```
 
 ## License
