@@ -26,8 +26,12 @@ func main() {
 				storage.WithLockPath("data/storage.lock"),
 				storage.WithCheckInterval(1*time.Millisecond),
 			)
-			storage.Save(&SampleData{Number: i})
-			log.Println("Saved:", i)
+			err := storage.Save(&SampleData{Number: i})
+			if err != nil {
+				log.Println("Error saving:", err)
+			} else {
+				log.Println("Saved:", i)
+			}
 		}()
 	}
 	wg.Wait()
@@ -37,6 +41,11 @@ func main() {
 		storage.WithLockPath("data/storage.lock"),
 		storage.WithCheckInterval(1*time.Millisecond),
 	)
-	data, _ := storage.Load()
+	data, err := storage.Load()
+	if err != nil {
+		log.Println("Error loading:", err)
+		return
+	}
+
 	log.Println("Loaded:", data.Number)
 }
