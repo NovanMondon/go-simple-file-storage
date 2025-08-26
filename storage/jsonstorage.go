@@ -6,11 +6,6 @@ type JsonStorage[T any] struct {
 	storage StringStorage
 }
 
-// New is alias for NewJsonStorage
-func New[T any](filePath string, opts ...Option) JsonStorage[T] {
-	return NewJsonStorage[T](filePath, opts...)
-}
-
 func NewJsonStorage[T any](filePath string, opts ...Option) JsonStorage[T] {
 	return JsonStorage[T]{
 		storage: NewStringStorage(filePath, opts...),
