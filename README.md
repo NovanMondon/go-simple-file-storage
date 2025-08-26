@@ -130,3 +130,4 @@ func main() {
 
 `go-simple-file-storage` depends on these - see [LICENSES](./LICENSES/) for details.
 - https://github.com/gofrs/flock
+- https://github.com/BurntSushi/toml
