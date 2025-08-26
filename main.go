@@ -9,43 +9,62 @@ import (
 	"github.com/NovanMondon/go-simple-file-storage/storage"
 )
 
-type SampleData struct {
+type Sample struct {
 	Number int `json:"number"`
 }
 
 func main() {
+	store := storage.NewTOMLStorage[Sample](
+		"data/storage.txt",
+		storage.WithLockPath("data/storage.lock"),
+	)
+	err := store.Save(Sample{})
+	if err != nil {
+		log.Println("Error saving:", err)
+		return
+	}
+
 	count := 100
 	var wg sync.WaitGroup
 	wg.Add(count)
-	for i := 0; i < count; i++ {
+	for i := 1; i <= count; i++ {
 		go func() {
 			defer wg.Done()
 			time.Sleep(time.Millisecond * time.Duration(1+rand.Intn(100)))
-			storage := storage.New[*SampleData](
+			storage := storage.NewTOMLStorage[Sample](
 				"data/storage.txt",
 				storage.WithLockPath("data/storage.lock"),
 				storage.WithCheckInterval(1*time.Millisecond),
+				storage.WithRetryMax(100),
 			)
-			err := storage.Save(&SampleData{Number: i})
+
+			file, err := storage.Open()
 			if err != nil {
-				log.Println("Error saving:", err)
-			} else {
-				log.Println("Saved:", i)
+				log.Println("Error opening:", err)
+				return
 			}
+			defer storage.Close()
+
+			content, err := file.Read()
+			if err != nil {
+				log.Println("Error reading:", err)
+				return
+			}
+			content.Number += i
+			if err := file.Write(content); err != nil {
+				log.Println("Error writing:", err)
+				return
+			}
+			log.Println("Written:", content.Number)
 		}()
 	}
 	wg.Wait()
 
-	storage := storage.New[*SampleData](
-		"data/storage.txt",
-		storage.WithLockPath("data/storage.lock"),
-		storage.WithCheckInterval(1*time.Millisecond),
-	)
-	data, err := storage.Load()
+	content, err := store.Load()
 	if err != nil {
 		log.Println("Error loading:", err)
 		return
 	}
 
-	log.Println("Loaded:", data.Number)
+	log.Println("Loaded:", content.Number)
 }
