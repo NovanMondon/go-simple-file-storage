@@ -63,9 +63,16 @@ func (s StringStorage) TrySave(data string) error {
 	if !locked {
 		return ErrCouldNotAcquireLock
 	}
-	defer s.lock.Unlock()
 
-	return os.WriteFile(s.filePath, []byte(data), 0644)
+	if err := os.WriteFile(s.filePath, []byte(data), 0644); err != nil {
+		return err
+	}
+
+	if err := s.lock.Unlock(); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (s StringStorage) TryLoad() (string, error) {
@@ -76,11 +83,15 @@ func (s StringStorage) TryLoad() (string, error) {
 	if !locked {
 		return "", ErrCouldNotAcquireLock
 	}
-	defer s.lock.Unlock()
 
 	data, err := os.ReadFile(s.filePath)
 	if err != nil {
 		return "", err
 	}
+
+	if err := s.lock.Unlock(); err != nil {
+		return "", err
+	}
+
 	return string(data), nil
 }

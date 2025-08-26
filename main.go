@@ -21,7 +21,7 @@ func main() {
 		go func() {
 			defer wg.Done()
 			time.Sleep(time.Millisecond * time.Duration(1+rand.Intn(100)))
-			storage := storage.New[*SampleData](
+			storage := storage.NewJsonStorage[*SampleData](
 				"data/storage.txt",
 				storage.WithLockPath("data/storage.lock"),
 				storage.WithCheckInterval(1*time.Millisecond),
@@ -36,7 +36,7 @@ func main() {
 	}
 	wg.Wait()
 
-	storage := storage.New[*SampleData](
+	storage := storage.NewJsonStorage[*SampleData](
 		"data/storage.txt",
 		storage.WithLockPath("data/storage.lock"),
 		storage.WithCheckInterval(1*time.Millisecond),
