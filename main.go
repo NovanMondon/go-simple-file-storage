@@ -17,7 +17,6 @@ func main() {
 	store := storage.NewTOMLStorage[Sample](
 		"data/storage.txt",
 		storage.WithLockPath("data/storage.lock"),
-		storage.WithCheckInterval(1*time.Millisecond),
 	)
 	err := store.Save(Sample{})
 	if err != nil {
@@ -36,21 +35,25 @@ func main() {
 				"data/storage.txt",
 				storage.WithLockPath("data/storage.lock"),
 				storage.WithCheckInterval(1*time.Millisecond),
+				storage.WithRetryMax(100),
 			)
 
 			file, err := storage.Open()
 			if err != nil {
 				log.Println("Error opening:", err)
+				return
 			}
 			defer storage.Close()
 
 			content, err := file.Read()
 			if err != nil {
 				log.Println("Error reading:", err)
+				return
 			}
 			content.Number += i
 			if err := file.Write(content); err != nil {
 				log.Println("Error writing:", err)
+				return
 			}
 			log.Println("Written:", content.Number)
 		}()
