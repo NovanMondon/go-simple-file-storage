@@ -133,3 +133,41 @@ func (s Storage[T]) Save(content T) error {
 
 	return ErrFailedToAcquireLock
 }
+
+func (s Storage[T]) TryOpen() (OpenedStorage[T], error) {
+	locked, err := s.lock.TryLock()
+	if err != nil {
+		return OpenedStorage[T]{}, err
+	}
+	if !locked {
+		return OpenedStorage[T]{}, ErrCouldNotAcquireLock
+	}
+
+	return OpenedStorage[T]{
+		filePath:  s.c.filePath,
+		marshal:   s.marshal,
+		unmarshal: s.unmarshal,
+	}, nil
+}
+
+func (s Storage[T]) Open() (OpenedStorage[T], error) {
+	retryCount := 0
+	for {
+		file, err := s.TryOpen()
+		if err == ErrCouldNotAcquireLock {
+			time.Sleep(s.c.checkInterval)
+			retryCount++
+			if s.c.retryMax >= 0 && retryCount > s.c.retryMax {
+				break
+			}
+			continue
+		}
+		return file, err
+	}
+
+	return OpenedStorage[T]{}, ErrFailedToAcquireLock
+}
+
+func (s Storage[T]) Close() error {
+	return s.lock.Unlock()
+}
