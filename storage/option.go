@@ -2,16 +2,22 @@ package storage
 
 import "time"
 
-type Option func(*StringStorage)
+type Option func(*storageConfigs)
 
 func WithLockPath(lockPath string) Option {
-	return func(s *StringStorage) {
-		s.lockPath = lockPath
+	return func(c *storageConfigs) {
+		c.lockPath = lockPath
 	}
 }
 
 func WithCheckInterval(interval time.Duration) Option {
-	return func(s *StringStorage) {
-		s.checkInterval = interval
+	return func(c *storageConfigs) {
+		c.checkInterval = interval
+	}
+}
+
+func WithRetryMax(retryMax int) Option {
+	return func(c *storageConfigs) {
+		c.retryMax = retryMax
 	}
 }
