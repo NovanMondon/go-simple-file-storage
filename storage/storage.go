@@ -171,3 +171,43 @@ func (s Storage[T]) Open() (OpenedStorage[T], error) {
 func (s Storage[T]) Close() error {
 	return s.lock.Unlock()
 }
+
+func (s Storage[T]) TryCleanup() error {
+	locked, err := s.lock.TryLock()
+	if err != nil {
+		return err
+	}
+	if !locked {
+		return ErrCouldNotAcquireLock
+	}
+	defer s.lock.Unlock()
+
+	err = os.Remove(s.c.filePath)
+	if err != nil && !os.IsNotExist(err) {
+		return err
+	}
+
+	err = os.Remove(s.c.lockPath)
+	if err != nil && !os.IsNotExist(err) {
+		return err
+	}
+
+	return nil
+}
+
+func (s Storage[T]) Cleanup() error {
+	retry := 0
+	for {
+		err := s.TryCleanup()
+		if err == ErrCouldNotAcquireLock {
+			time.Sleep(s.c.checkInterval)
+			retry++
+			if s.c.retryMax >= 0 && retry > s.c.retryMax {
+				break
+			}
+			continue
+		}
+		return err
+	}
+	return ErrFailedToAcquireLock
+}
