@@ -19,7 +19,7 @@ type Storage[T any] struct {
 type storageConfigs struct {
 	filePath      string
 	lockPath      string
-	checkInterval time.Duration
+	retryInterval time.Duration
 	retryMax      int
 }
 
@@ -33,7 +33,7 @@ func New[T any](
 		c: storageConfigs{
 			filePath:      filePath,
 			lockPath:      filePath + ".lock",
-			checkInterval: 100 * time.Millisecond,
+			retryInterval: 100 * time.Millisecond,
 			retryMax:      -1,
 		},
 
@@ -102,7 +102,7 @@ func (s Storage[T]) Load() (T, error) {
 	for {
 		content, err := s.TryLoad()
 		if err == ErrCouldNotAcquireLock {
-			time.Sleep(s.c.checkInterval)
+			time.Sleep(s.c.retryInterval)
 			retryCount++
 			if s.c.retryMax >= 0 && retryCount > s.c.retryMax {
 				break
@@ -121,7 +121,7 @@ func (s Storage[T]) Save(content T) error {
 	for {
 		err := s.TrySave(content)
 		if err == ErrCouldNotAcquireLock {
-			time.Sleep(s.c.checkInterval)
+			time.Sleep(s.c.retryInterval)
 			retry++
 			if s.c.retryMax >= 0 && retry > s.c.retryMax {
 				break
@@ -155,7 +155,7 @@ func (s Storage[T]) Open() (OpenedStorage[T], error) {
 	for {
 		file, err := s.TryOpen()
 		if err == ErrCouldNotAcquireLock {
-			time.Sleep(s.c.checkInterval)
+			time.Sleep(s.c.retryInterval)
 			retryCount++
 			if s.c.retryMax >= 0 && retryCount > s.c.retryMax {
 				break
@@ -200,7 +200,7 @@ func (s Storage[T]) Cleanup() error {
 	for {
 		err := s.TryCleanup()
 		if err == ErrCouldNotAcquireLock {
-			time.Sleep(s.c.checkInterval)
+			time.Sleep(s.c.retryInterval)
 			retry++
 			if s.c.retryMax >= 0 && retry > s.c.retryMax {
 				break

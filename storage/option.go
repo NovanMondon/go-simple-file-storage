@@ -10,9 +10,9 @@ func WithLockPath(lockPath string) Option {
 	}
 }
 
-func WithCheckInterval(interval time.Duration) Option {
+func WithRetryInterval(interval time.Duration) Option {
 	return func(c *storageConfigs) {
-		c.checkInterval = interval
+		c.retryInterval = interval
 	}
 }
 
