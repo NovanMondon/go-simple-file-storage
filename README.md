@@ -99,7 +99,7 @@ func main() {
 			storage := storage.NewTOMLStorage[Sample](
 				"data/storage.txt",
 				storage.WithLockPath("data/storage.lock"),
-				storage.WithCheckInterval(1*time.Millisecond),
+				storage.WithRetryInterval(1*time.Millisecond),
 				storage.WithRetryMax(100),
 			)
 
